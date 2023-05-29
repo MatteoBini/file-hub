@@ -14,29 +14,31 @@ const initializePassport = require("./passportConfig");
 
 const app = express();
 
+const PORT = process.env.PORT || 8000;
+
 const storage = multer.diskStorage({
     destination: (req, file, callback) => {
         callback(null, "uploads");
     },
     filename: (req, file, callback) => {
-        const fileName = `${(new Date().toJSON().slice(0,19))}_${
-                                file.originalname}`;
+        const fileName = `${(new Date().toJSON().slice(0, 19))}_${file.originalname}`;
         console.log(`Created file ${fileName}`)
         callback(null, fileName);
     }
 });
 
-
 const upload = multer({ storage: storage });
 
-const PORT = process.env.PORT || 8000;
+initializePassport(passport);
+
+app.set("view engine", "ejs");
+app.set('case sensitive routing', true);
 
 app.use(flash());
-initializePassport(passport);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'static')));
 app.use(express.urlencoded({ extended: false }));
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 app.use(
     session({
         secret: "ugo",
@@ -46,13 +48,29 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-app.set("view engine", "ejs");
-app.set('case sensitive routing', true);
 
-app.post("/", upload.single("file" /* name of file in form*/), (req, res) => {
+app.get("/", (req, res) => {
+
+    let data = {
+        files: utils.getFiles(),
+        successMessage: req.query.successMessage,
+        infoMessage: req.query.infoMessage,
+        warningMessage: req.query.warningMessage,
+        errorMessage: req.query.errorMessage
+    }
+
+    if (req.isAuthenticated()) {
+        res.render("home.ejs", data);
+    } else {
+        res.render("login.ejs", data);
+    }
+    
+});
+
+app.post("/", upload.single("file" /* name of file in form */), (req, res) => {
     const { folderName } = req.body;
 
-    if (folderName){
+    if (folderName) {
         const folderPath = `uploads/${folderName}`;
 
         if (!fs.existsSync(folderPath)) { // Check if the folder already exists
@@ -62,27 +80,16 @@ app.post("/", upload.single("file" /* name of file in form*/), (req, res) => {
             console.log(`Folder ${folderPath} already exists.`);
         }
     }
-    
+
     res.render("index.ejs", {
         isLogged: req.isAuthenticated(),
-        files: utils.getFiles(), 
-        successMessage: "File uploaded successfully" 
-    });
-});
-
-app.get("/", (req, res) => {
-    res.render("index.ejs", { 
-        isLogged: req.isAuthenticated(),
         files: utils.getFiles(),
-        successMessage: req.query.successMessage,
-        infoMessage: req.query.infoMessage,
-        warningMessage: req.query.warningMessage,
-        errorMessage: req.query.errorMessage
+        successMessage: "File uploaded successfully"
     });
 });
 
 app.get("/admin", (req, res) => {
-    res.render("admin.ejs", { 
+    res.render("admin.ejs", {
         isLogged: req.isAuthenticated(),
         files: utils.getFiles(),
         successMessage: req.query.successMessage,
@@ -94,12 +101,11 @@ app.get("/admin", (req, res) => {
 
 app.get("/files/:id", (req, res) => {
     const fileName = req.params.id;
-
     const files = utils.getFiles();
 
     for (let f of files) {
         if (f == fileName) {
-            console.log(`Serving file ${fileName}`)
+            console.log(`Viewed file ${fileName}`);
             const filePath = path.join(__dirname, `uploads/${fileName}`);
             return res.sendFile(filePath);
         }
@@ -111,7 +117,6 @@ app.get("/files/:id", (req, res) => {
 
 app.get("/delete/:id", (req, res) => {
     const fileName = req.params.id;
-
     const files = utils.getFiles();
 
     for (let f of files) {

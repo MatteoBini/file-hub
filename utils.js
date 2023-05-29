@@ -5,7 +5,6 @@ const fs = require(`fs`);
 
 (function() {
 
-
     module.exports.getFiles = function() {
         files = fs.readdirSync(path.join(__dirname, "uploads"));
         return files;
