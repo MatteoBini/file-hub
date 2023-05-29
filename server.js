@@ -31,6 +31,7 @@ const upload = multer({ storage: storage });
 
 const PORT = process.env.PORT || 8000;
 
+app.use(flash());
 initializePassport(passport);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'static')));
@@ -63,6 +64,7 @@ app.post("/", upload.single("file" /* name of file in form*/), (req, res) => {
     }
     
     res.render("index.ejs", {
+        isLogged: req.isAuthenticated(),
         files: utils.getFiles(), 
         successMessage: "File uploaded successfully" 
     });
@@ -70,6 +72,7 @@ app.post("/", upload.single("file" /* name of file in form*/), (req, res) => {
 
 app.get("/", (req, res) => {
     res.render("index.ejs", { 
+        isLogged: req.isAuthenticated(),
         files: utils.getFiles(),
         successMessage: req.query.successMessage,
         infoMessage: req.query.infoMessage,
@@ -80,6 +83,7 @@ app.get("/", (req, res) => {
 
 app.get("/admin", (req, res) => {
     res.render("admin.ejs", { 
+        isLogged: req.isAuthenticated(),
         files: utils.getFiles(),
         successMessage: req.query.successMessage,
         infoMessage: req.query.infoMessage,
@@ -87,7 +91,6 @@ app.get("/admin", (req, res) => {
         errorMessage: req.query.errorMessage
     });
 });
-
 
 app.get("/files/:id", (req, res) => {
     const fileName = req.params.id;
@@ -125,6 +128,14 @@ app.get("/delete/:id", (req, res) => {
     res.redirect('/?errorMessage=' + message);
 });
 
+app.post(
+    "/login",
+    passport.authenticate("local", {
+        successRedirect: "/success",
+        failureRedirect: "/failure",
+        failureFlash: true
+    })
+);
 
 // Test the connection to the database
 pool.getConnection((err, connection) => {

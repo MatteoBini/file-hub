@@ -8,39 +8,42 @@
     <link rel="stylesheet" type="text/css" href="css/style.css"/>
 </head>
 <body>
+<!-- messages space start -->
+    <% if (locals.successMessage){ %>
+        <div class="message success">
+            <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+            <p><%= successMessage %></p>
+        </div>
+    <% } %>
+
+    <% if (locals.infoMessage){ %>
+        <div class="message info">
+            <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+            <p><%= infoMessage %></p>
+        </div>
+    <% } %>
+
+    <% if (locals.warningMessage){ %>
+        <div class="message warning">
+            <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+            <p><%= warningMessage %></p>
+        </div>
+    <% } %>
+
+    <% if (locals.errorMessage){ %>
+        <div class="message error">
+            <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+            <p><%= errorMessage %></p>
+        </div>
+    <% } %>
+<!-- messages space end -->
+
+<% if (isLogged === true) { %>
+<!-- user authenticated start -->
     <main>
         <div class="login">
             <a href="/admin">Admin</a>
         </div>
-<!-- messages space start -->
-        <% if (locals.successMessage){ %>
-            <div class="message success">
-                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-                <p><%= successMessage %></p>
-            </div>
-        <% } %>
-
-        <% if (locals.infoMessage){ %>
-            <div class="message info">
-                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-                <p><%= infoMessage %></p>
-            </div>
-        <% } %>
-
-        <% if (locals.warningMessage){ %>
-            <div class="message warning">
-                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-                <p><%= warningMessage %></p>
-            </div>
-        <% } %>
-
-        <% if (locals.errorMessage){ %>
-            <div class="message error">
-                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-                <p><%= errorMessage %></p>
-            </div>
-        <% } %>
-<!-- messages space end -->
 
         <h1>File hub</h1>
         <h3>Saved files:</h3>
@@ -66,5 +69,24 @@
             <input type="submit" value="Send" placeholder="Folder name">
         </form>
     </main>
+<!-- user authenticated end -->
+<% } else { %>
+<!-- user not authenticated start -->
+
+    <main>
+        <h1>Log in</h1>
+
+        <form action="/login" method="POST">
+            <label for="Username">Username:</label>
+            <input type="text" placeholder="username" name="Username" id="Username" required >
+            <label for="Password">Password</label>
+            <input type="password" placeholder="Password" name="password" id="password" required >
+            <button id="submit">Accedi</button>
+        </form>
+
+    </main>
+
+<!-- user not authenticated end -->
+<% } %>
 </body>
 </html>

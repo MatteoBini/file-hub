@@ -7,7 +7,7 @@ function initialize(passport) {
 
     const authenticateUser = (username, password, done) => {
         pool.query(
-            `SELECT * FROM subscribers WHERE username = $1`,
+            `SELECT * FROM users WHERE username = $1`,
             [username],
             (err, results) => {
                 if (err) {
@@ -18,17 +18,17 @@ function initialize(passport) {
                     const user = results.rows[0];
 
                     bcrypt.compare(password, user.password, (err, isMatch) => {
-                    if (err) {
-                        console.log(err);
-                    }
-                    if (isMatch) {
-                        return done(null, user);
-                    } else {
-                        return done(null, false, { 
-                            errorMessage: "The password is not correct" 
-                        });
-                    }
-                });
+                        if (err) {
+                            console.log(err);
+                        }
+                        if (isMatch) {
+                            return done(null, user);
+                        } else {
+                            return done(null, false, { 
+                                errorMessage: "The password is not correct" 
+                            });
+                        }
+                    });
                 } else {
                     return done(null, false, {
                         errorMessage: "The username is not correct"
@@ -40,7 +40,7 @@ function initialize(passport) {
 
     passport.use(
         new LocalStrategy(
-            { usernameField: "email", passwordField: "password" },
+            { usernameField: "username", passwordField: "password" },
             authenticateUser
         )
     );
