@@ -3,12 +3,12 @@
     <% for (let user of users) { %>
         <li>
             <%= user %>
-            <a href="/user/<%= user %>" target="_blank">View</a>
-            <a href="/delete-user/<%= user %>">Delete</a>
+            <a href="/users/<%= user %>" target="_blank">View</a>
+            <a href="/users/delete/<%= user %>">Delete</a>
         </li>
     <% } %>
 </ul>
-<form action="/user/create" method="POST">
+<form action="/users/create" method="POST">
     <label for="new_user">Nuovo utente:</label>
     <input type="text" name="new_user" id="new_user" />
 </form>

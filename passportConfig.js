@@ -5,13 +5,13 @@ const bcrypt = require("bcrypt");
 function initialize(passport) {
     const authenticateUser = (username, password, done) => {
         pool.query(
-            `SELECT * FROM users WHERE username = $1`,
+            `SELECT * FROM users WHERE username = ?`,
             [username],
             (err, results) => {
                 if (err) {  throw err;  }
-                
-                if (results.rows.length > 0) {
-                    const user = results.rows[0];
+
+                if (results.length > 0) {
+                    const user = results[0];
 
                     bcrypt.compare(password, user.password, (err, isMatch) => {
                         if (err) {
@@ -20,15 +20,11 @@ function initialize(passport) {
                         if (isMatch) {
                             return done(null, user);
                         } else {
-                            return done(null, false, { 
-                                errorMessage: "The password is not correct" 
-                            });
+                            return done(null, false);
                         }
                     });
                 } else {
-                    return done(null, false, {
-                        errorMessage: "The username is not correct"
-                    });
+                    return done(null, false);
                 }
             }
         );
@@ -50,11 +46,11 @@ function initialize(passport) {
     // In deserializeUser that key is matched with the in memory array / database or any data resource.
     // The fetched object is attached to the request object as req.user
     passport.deserializeUser((id, done) => {
-        pool.query(`SELECT * FROM subscribers WHERE id = $1`, [id], (err, results) => {
+        pool.query(`SELECT * FROM users WHERE id = ?`, [id], (err, results) => {
             if (err) {
                 return done(err);
             }
-            return done(null, results.rows[0]);
+            return done(null, results[0]);
         });
     });
 

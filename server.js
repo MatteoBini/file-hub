@@ -4,13 +4,13 @@ const bodyParser = require('body-parser');
 const passport = require("passport");
 const flash = require("express-flash");
 const session = require("express-session");
-
 const path = require(`path`);
-const fs = require(`fs`);
 
 const utils = require(`./utils`);
 const { pool } = require(`./dbConfig`);
 const initializePassport = require("./passportConfig");
+const usersRoutes = require('./routes/users');
+const filesRoutes = require('./routes/files');
 
 const app = express();
 
@@ -34,6 +34,8 @@ initializePassport(passport);
 app.set("view engine", "ejs");
 app.set('case sensitive routing', true);
 
+app.use('/users', usersRoutes);
+app.use('/files', filesRoutes);
 app.use(flash());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'static')));
@@ -67,80 +69,33 @@ app.get("/", (req, res) => {
     
 });
 
-app.post("/", upload.single("file" /* name of file in form */), (req, res) => {
-    const { folderName } = req.body;
-
-    if (folderName) {
-        const folderPath = `uploads/${folderName}`;
-
-        if (!fs.existsSync(folderPath)) { // Check if the folder already exists
-            fs.mkdirSync(folderPath, { recursive: true });
-            console.log(`Created folder ${folderPath}`);
-        } else {
-            console.log(`Folder ${folderPath} already exists.`);
-        }
-    }
-
-    res.render("index.ejs", {
-        isLogged: req.isAuthenticated(),
-        files: utils.getFiles(),
-        successMessage: "File uploaded successfully"
-    });
-});
-
 app.get("/admin", (req, res) => {
-    res.render("admin.ejs", {
-        isLogged: req.isAuthenticated(),
-        files: utils.getFiles(),
-        successMessage: req.query.successMessage,
-        infoMessage: req.query.infoMessage,
-        warningMessage: req.query.warningMessage,
-        errorMessage: req.query.errorMessage
-    });
-});
-
-app.get("/files/:id", (req, res) => {
-    const fileName = req.params.id;
-    const files = utils.getFiles();
-
-    for (let f of files) {
-        if (f == fileName) {
-            console.log(`Viewed file ${fileName}`);
-            const filePath = path.join(__dirname, `uploads/${fileName}`);
-            return res.sendFile(filePath);
-        }
+    if (req.isAuthenticated()) {
+        res.render("admin.ejs", {
+            files: utils.getFiles(),
+        });
+    } else {
+        let message = encodeURIComponent('You must be authenticated');
+        res.redirect('/?errorMessage=' + message);
     }
-
-    let message = encodeURIComponent('File not found');
-    res.redirect('/?errorMessage=' + message);
-});
-
-app.get("/delete/:id", (req, res) => {
-    const fileName = req.params.id;
-    const files = utils.getFiles();
-
-    for (let f of files) {
-        if (f == fileName) {
-            const filePath = path.join(__dirname, `uploads/${fileName}`);
-            fs.unlinkSync(filePath);
-            console.log(`Deleted file ${fileName}`);
-            let message = encodeURIComponent('File deleted successfully');
-            return res.redirect('/?successMessage=' + message);
-        }
-    }
-
-    let message = encodeURIComponent('File not found');
-    res.redirect('/?errorMessage=' + message);
 });
 
 app.post(
     "/login",
     passport.authenticate("local", {
-        successRedirect: "/success",
-        failureRedirect: "/failure",
+        successRedirect: "/?successMessage=Login successful",
+        failureRedirect: "/?errorMessage=Login wrong",
         failureFlash: true
     })
 );
+
+app.get("/logout", (req, res) => {
+    req.logout(function(err){
+        if (err) { return next(err); }
+    });
+    let message = encodeURIComponent("You have successfully logged out");
+    res.redirect('/?successMessage=' + message);
+});
 
 // Test the connection to the database
 pool.getConnection((err, connection) => {

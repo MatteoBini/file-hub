@@ -4,19 +4,19 @@
         <li>
             <%= file %>
             <a href="/files/<%= file %>" target="_blank">View</a>
-            <a href="/delete/<%= file %>">Delete</a>
+            <a href="/files/delete/<%= file %>">Delete</a>
         </li>
     <% } %>
 </ul>
 
 <h3>Upload a file</h3>
-<form action="/" method="POST" enctype="multipart/form-data">
+<form action="/files/create" method="POST" enctype="multipart/form-data">
     <input type="file" id="file" name="file">
     <input type="submit" value="Upload">
 </form>
 
 <h3>Create a folder</h3>
-<form action="/" method="POST">
+<form action="/files/create" method="POST" enctype="multipart/form-data">
     <input type="text" id="folderName" name="folderName">
     <input type="submit" value="Send" placeholder="Folder name">
 </form>
