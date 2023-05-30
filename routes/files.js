@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 const multer = require(`multer`);
-const utils = require(`./../utils`);
 const path = require(`path`);
 const fs = require(`fs`);
+const { pool } = require(`../dbConfig`);
+const utils = require(`./../utils`);
 
 const storage = multer.diskStorage({
     destination: (req, file, callback) => {
@@ -38,8 +39,9 @@ router.get("/:id", (req, res) => {
 router.post("/create", upload.single("file" /* name of file in form */), (req, res) => {
     const { folderName } = req.body;
 
+    let folderPath;
     if (folderName) {
-        const folderPath = `uploads/${folderName}`;
+        folderPath = `uploads/${folderName}`;
 
         if (!fs.existsSync(folderPath)) { // Check if the folder already exists
             fs.mkdirSync(folderPath, { recursive: true });
@@ -48,6 +50,16 @@ router.post("/create", upload.single("file" /* name of file in form */), (req, r
             console.log(`Folder ${folderPath} already exists.`);
         }
     }
+
+    pool.query(
+        'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
+        [req.user.id, `Created ${folderPath} (if undefined created a file)`],
+        (error, results) => {
+          if (error) {
+            console.error(error);
+          }
+        }
+    );
 
     let message = encodeURIComponent('File uploaded successfully');
     res.redirect('/?successMessage=' + message);
@@ -66,6 +78,16 @@ router.get("/delete/:id", (req, res) => {
             return res.redirect('/?successMessage=' + message);
         }
     }
+
+    pool.query(
+        'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
+        [req.user.id, `Deleted ${req.params.id}`],
+        (error, results) => {
+          if (error) {
+            console.error(error);
+          }
+        }
+    );
 
     let message = encodeURIComponent("File not found");
     res.redirect('/?errorMessage=' + message);

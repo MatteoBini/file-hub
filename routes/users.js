@@ -8,24 +8,17 @@ const { pool } = require(`../dbConfig`);
 
 router.use(express.urlencoded({ extended: true }));
 
-router.get("/:id", (req, res) => {/*
-    const files = utils.getFiles();
-
-    for (let f of files) {
-        if (f == fileName) {
-            console.log(`Viewed file ${fileName}`);
-            const filePath = path.join(__dirname, `../uploads/${fileName}`);
-            return res.render(
-                "admin.ejs",
-                {
-                    files: utils.getFiles,
-                }
-            );
+router.get("/:id", (req, res) => {
+    pool.query(
+        `SELECT * FROM user_logs WHERE user_id = ?`,
+        [req.params.id],
+        (err, results) => {
+            if (err) {  throw err;  }
+            console.log(results)
+            return res.render("user.ejs", { logs: results });
         }
-    }
+    );
 
-    let message = encodeURIComponent('File not found');
-    res.redirect('/?errorMessage=' + message);*/
 });
 
 router.post("/create", (req, res) => {
@@ -35,7 +28,8 @@ router.post("/create", (req, res) => {
     bcrypt.hash(password, 10, (err, hash) => {
         if (err) {
             console.log(err);
-            // Handle the error appropriately, e.g., return an error response
+            let message = encodeURIComponent("User creation gone wrong");
+            res.redirect('/admin?errorMessage=' + message);
         } else {
             pool.query(
                 `INSERT INTO users (username, password) VALUES (?, ?);`,
@@ -53,6 +47,16 @@ router.post("/create", (req, res) => {
           );
         }
     });
+
+    pool.query(
+        'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
+        [req.user.id, `Created user ${username}`],
+        (error, results) => {
+          if (error) {
+            console.error(error);
+          }
+        }
+    );
 });
 
 module.exports = router;

@@ -1,0 +1,22 @@
+<%- include("./partials/header") %>
+
+<h3><%= logs[0].id %>'s logs</h3>
+
+<table border="1px solid black">
+    <tr>
+        <td>log.id %></td>
+        <td>log.user_id</td>
+        <td>log.operation</td>
+        <td>log.timestamp</td>
+    </tr>
+<% for (let log of logs) { %>
+    <tr>
+        <td><%= log.id %></td>
+        <td><%= log.user_id %></td>
+        <td><%= log.operation %></td>
+        <td><%= log.timestamp %></td>
+    </tr>
+<% } %>
+</table>
+
+<%- include("./partials/footer") %>
