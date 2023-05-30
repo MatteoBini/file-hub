@@ -19,6 +19,22 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+router.get("/:id", (req, res) => {
+    const fileName = req.params.id;
+    const files = utils.getFiles();
+
+    for (let f of files) {
+        if (f == fileName) {
+            console.log(`Viewed file ${fileName}`);
+            const filePath = path.join(__dirname, `../uploads/${fileName}`);
+            return res.sendFile(filePath);
+        }
+    }
+
+    let message = encodeURIComponent('File not found');
+    res.redirect('/?errorMessage=' + message);
+});
+
 router.post("/create", upload.single("file" /* name of file in form */), (req, res) => {
     const { folderName } = req.body;
 
@@ -35,22 +51,6 @@ router.post("/create", upload.single("file" /* name of file in form */), (req, r
 
     let message = encodeURIComponent('File uploaded successfully');
     res.redirect('/?successMessage=' + message);
-});
-
-router.get("/:id", (req, res) => {
-    const fileName = req.params.id;
-    const files = utils.getFiles();
-
-    for (let f of files) {
-        if (f == fileName) {
-            console.log(`Viewed file ${fileName}`);
-            const filePath = path.join(__dirname, `../uploads/${fileName}`);
-            return res.sendFile(filePath);
-        }
-    }
-
-    let message = encodeURIComponent('File not found');
-    res.redirect('/?errorMessage=' + message);
 });
 
 router.get("/delete/:id", (req, res) => {

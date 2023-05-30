@@ -2,13 +2,15 @@
 <ul>
     <% for (let user of users) { %>
         <li>
-            <%= user %>
-            <a href="/users/<%= user %>" target="_blank">View</a>
-            <a href="/users/delete/<%= user %>">Delete</a>
+            <%= user.username %>
+            <a href="/users/<%= user.id %>" target="_blank">View</a>
+            <a href="/users/delete/<%= user.id %>">Delete</a>
         </li>
     <% } %>
 </ul>
-<form action="/users/create" method="POST">
-    <label for="new_user">Nuovo utente:</label>
-    <input type="text" name="new_user" id="new_user" />
+<h3>Create a new user</h3>
+<form name="myForm" method="POST" action="/users/create" enctype="application/x-www-form-urlencoded">
+    <input type="text" id="username" name="username">
+    <input type="password" id="password" name="password" >
+    <button>Create</button>
 </form>

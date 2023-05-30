@@ -3,10 +3,12 @@
 const path = require(`path`);
 const fs = require(`fs`);
 
+const { pool } = require(`./dbConfig`);
+
 (function() {
 
     module.exports.getFiles = function() {
-        files = fs.readdirSync(path.join(__dirname, "uploads"));
+        let files = fs.readdirSync(path.join(__dirname, "uploads"));
         return files;
     }
 

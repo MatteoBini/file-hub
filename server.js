@@ -16,26 +16,11 @@ const app = express();
 
 const PORT = process.env.PORT || 8000;
 
-const storage = multer.diskStorage({
-    destination: (req, file, callback) => {
-        callback(null, "uploads");
-    },
-    filename: (req, file, callback) => {
-        const fileName = `${(new Date().toJSON().slice(0, 19))}_${file.originalname}`;
-        console.log(`Created file ${fileName}`)
-        callback(null, fileName);
-    }
-});
-
-const upload = multer({ storage: storage });
-
 initializePassport(passport);
 
 app.set("view engine", "ejs");
 app.set('case sensitive routing', true);
 
-app.use('/users', usersRoutes);
-app.use('/files', filesRoutes);
 app.use(flash());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'static')));
@@ -50,9 +35,10 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+app.use('/users', usersRoutes);
+app.use('/files', filesRoutes);
 
 app.get("/", (req, res) => {
-
     let data = {
         files: utils.getFiles(),
         successMessage: req.query.successMessage,
@@ -71,9 +57,20 @@ app.get("/", (req, res) => {
 
 app.get("/admin", (req, res) => {
     if (req.isAuthenticated()) {
-        res.render("admin.ejs", {
-            files: utils.getFiles(),
-        });
+        pool.query(
+            `SELECT * FROM users;`,
+            (err, results) => {
+                if (err) {  throw err;  }
+                return res.render("admin.ejs", { 
+                    files: utils.getFiles(), 
+                    successMessage: req.query.successMessage,
+                    infoMessage: req.query.infoMessage,
+                    warningMessage: req.query.warningMessage,
+                    errorMessage: req.query.errorMessage,
+                    users: results
+                });
+            }
+        );
     } else {
         let message = encodeURIComponent('You must be authenticated');
         res.redirect('/?errorMessage=' + message);
