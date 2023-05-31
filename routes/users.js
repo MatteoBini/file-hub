@@ -13,7 +13,7 @@ router.get("/:id", (req, res) => {
         `SELECT * FROM user_logs WHERE user_id = ?;`,
         [req.params.id],
         (err, results) => {
-            if (err) {  throw err;  }
+            if (err) { throw err; }
             console.log(results)
             return res.render("user.ejs", { logs: results });
         }

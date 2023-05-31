@@ -36,24 +36,29 @@ router.get("/:id", (req, res) => {
     res.redirect('/?errorMessage=' + message);
 });
 
-router.post("/create", upload.single("file" /* name of file in form */), (req, res) => {
-    const { folderName } = req.body;
+router.post('/create', upload.single('file'), (req, res) => {
+    const { filename, size, mimetype } = req.file;
+    const { userID } = req.body;
+    const uploadDate = new Date().toISOString();
 
-    let folderPath;
-    if (folderName) {
-        folderPath = `uploads/${folderName}`;
+    const insertFileQuery = `
+      INSERT INTO Files (FileName, FileSize, FileType, UploadDate, UserID)
+      VALUES (?, ?, ?, ?, ?)
+    `;
 
-        if (!fs.existsSync(folderPath)) { // Check if the folder already exists
-            fs.mkdirSync(folderPath, { recursive: true });
-            console.log(`Created folder ${folderPath}`);
-        } else {
-            console.log(`Folder ${folderPath} already exists.`);
+    let fileID;
+    pool.run(insertFileQuery, [filename, size, mimetype, uploadDate, userID], function (err) {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Error uploading file');
         }
-    }
+
+        fileID = this.lastID;
+    });
 
     pool.query(
         'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
-        [req.user.id, `Created ${folderPath} (if undefined created a file)`],
+        [req.user.id, `Created ${fileID} (if undefined created a file)`],
         (error, results) => {
           if (error) {
             console.error(error);

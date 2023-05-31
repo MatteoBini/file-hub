@@ -11,6 +11,7 @@ const { pool } = require(`./dbConfig`);
 const initializePassport = require("./passportConfig");
 const usersRoutes = require('./routes/users');
 const filesRoutes = require('./routes/files');
+const foldersRoutes = require('./routes/folders');
 
 const app = express();
 
@@ -37,8 +38,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use('/users', usersRoutes);
 app.use('/files', filesRoutes);
+app.use('/folders', foldersRoutes);
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
     let data = {
         files: utils.getFiles(),
         successMessage: req.query.successMessage,
@@ -48,6 +50,7 @@ app.get("/", (req, res) => {
     }
 
     if (req.isAuthenticated()) {
+        data.folders = await utils.getFolders(),
         res.render("home.ejs", data);
     } else {
         res.render("login.ejs", data);

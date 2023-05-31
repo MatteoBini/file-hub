@@ -1,0 +1,14 @@
+<ul>
+    <% folders.forEach(function(folder) { %>
+        <li class="folder">
+            <%= folder.FolderName %>
+                <form action="/folders/create" method="POST" enctype="multipart/form-data">
+                    <input type="text" id="folderName" name="folderName" placeholder="Subfolder name">
+                    <input type="submit" value="Send" placeholder="Submit">
+                </form>
+                <% if (folder.Subfolders && folder.Subfolders.length > 0) { %>
+                    <%- include('folders', { folders: folder.Subfolders }) %>
+            <% } %>
+        </li>
+    <% }); %>
+</ul>
