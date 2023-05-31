@@ -1,7 +1,7 @@
 <ul>
     <% folders.forEach(function(folder) { %>
         <li class="folder">
-            <%= folder.FolderName %>
+            <%= folder.FolderName %> <form method="POST" action="/folders/delete"><button type="submit" name="folderID" value="<%= folder.FolderID %>">Delete</button></form>
                 <form action="/folders/create" method="POST" enctype="application/x-www-form-urlencoded">
                     <input style="display: none" type="text" id="parentID" name="parentID" value="<%= folder.FolderID %>" />
                     <input type="text" id="folderName" name="folderName" placeholder="Subfolder name">

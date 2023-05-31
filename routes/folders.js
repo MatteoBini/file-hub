@@ -46,4 +46,36 @@ router.post("/create", (req, res) => {
     return res.redirect('/?successMessage=' + message);
 });
 
+router.post("/delete", (req, res) => {
+    const { folderID } = req.body;
+    const userID = req.user.id;
+
+    pool.query(
+        "DELETE FROM Folders WHERE FolderID=?",
+        [folderID],
+        (error, results) => {
+            if (error) {
+                console.error(error);
+                let message = encodeURIComponent('Err');
+                return res.redirect('/?errorMessage=' + message);
+            }
+        }
+    );
+
+    pool.query(
+        "INSERT INTO user_logs (user_id, operation) VALUES (?, ?)",
+        [userID, `Deleted ${folderID}`],
+        (error, results) => {
+            if (error) {
+                console.error(error);
+                let message = encodeURIComponent('Err');
+                return res.redirect('/?errorMessage=' + message);
+            }
+        }
+    );
+
+    let message = encodeURIComponent('Folder deleted successfully');
+    return res.redirect('/?successMessage=' + message);
+});
+
 module.exports = router;
