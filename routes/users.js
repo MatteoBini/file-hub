@@ -22,41 +22,40 @@ router.get("/:id", (req, res) => {
 });
 
 router.post("/create", (req, res) => {
+    const { username, password } = req.body;
 
-  const { username, password } = req.body;
-
-  bcrypt.hash(password, 10, (err, hash) => {
-      if (err) {
-          console.log(err);
-          let message = encodeURIComponent("User creation gone wrong");
-          res.redirect('/admin?errorMessage=' + message);
-      } else {
-          pool.query(
-              `INSERT INTO users (username, password) VALUES (?, ?);`,
-              [username, hash],
-              (error, results) => {
-                  if (error) {
-                      console.log(error);
-                      let message = encodeURIComponent("User creation gone wrong");
-                      res.redirect('/admin?errorMessage=' + message);
-            } else {
-              let message = encodeURIComponent("User created successfully");
-              res.redirect('/admin?successMessage=' + message);
-            }
-          }
-        );
-      }
-  });
-
-  pool.query(
-      'INSERT INTO user_logs (user_id, operation) VALUES (?, ?);',
-      [req.user.id, `Created user ${username}`],
-      (error, results) => {
-        if (error) {
-          console.error(error);
+    bcrypt.hash(password, 10, (err, hash) => {
+        if (err) {
+            console.log(err);
+            let message = encodeURIComponent("User creation gone wrong");
+            res.redirect('/admin?errorMessage=' + message);
+        } else {
+            pool.query(
+                `INSERT INTO users (username, password) VALUES (?, ?);`,
+                [username, hash],
+                (error, results) => {
+                    if (error) {
+                            console.log(error);
+                            let message = encodeURIComponent("User creation gone wrong");
+                            res.redirect('/admin?errorMessage=' + message);
+                    } else {
+                        let message = encodeURIComponent("User created successfully");
+                        res.redirect('/admin?successMessage=' + message);
+                    }
+                }
+            );
         }
-      }
-  );
+    });
+
+    pool.query(
+        'INSERT INTO user_logs (user_id, operation) VALUES (?, ?);',
+        [req.user.id, `Created user ${username}`],
+        (error, results) => {
+            if (error) {
+            console.error(error);
+            }
+        }
+    );
 });
 
 router.get("/delete/:id", (req, res) => {

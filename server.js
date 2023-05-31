@@ -57,20 +57,25 @@ app.get("/", (req, res) => {
 
 app.get("/admin", (req, res) => {
     if (req.isAuthenticated()) {
-        pool.query(
-            `SELECT * FROM users;`,
-            (err, results) => {
-                if (err) {  throw err;  }
-                return res.render("admin.ejs", { 
-                    files: utils.getFiles(), 
-                    successMessage: req.query.successMessage,
-                    infoMessage: req.query.infoMessage,
-                    warningMessage: req.query.warningMessage,
-                    errorMessage: req.query.errorMessage,
-                    users: results
-                });
-            }
-        );
+        if (req.user.username == "admin") {
+            pool.query(
+                `SELECT * FROM users;`,
+                (err, results) => {
+                    if (err) {  throw err;  }
+                    return res.render("admin.ejs", { 
+                        files: utils.getFiles(), 
+                        successMessage: req.query.successMessage,
+                        infoMessage: req.query.infoMessage,
+                        warningMessage: req.query.warningMessage,
+                        errorMessage: req.query.errorMessage,
+                        users: results
+                    });
+                }
+            );
+        } else {
+            let message = encodeURIComponent('Only admin can access');
+            res.redirect('/?warningMessage=' + message);            
+        }
     } else {
         let message = encodeURIComponent('You must be authenticated');
         res.redirect('/?errorMessage=' + message);

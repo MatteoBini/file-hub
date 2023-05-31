@@ -68,26 +68,63 @@ router.post("/create", upload.single("file" /* name of file in form */), (req, r
 router.get("/delete/:id", (req, res) => {
     const fileName = req.params.id;
     const files = utils.getFiles();
+    
+    if (req.user.username == "admin") {
+        // Admin can delete everything
 
-    for (let f of files) {
-        if (f == fileName) {
-            const filePath = path.join(__dirname, `../uploads/${fileName}`);
-            fs.unlinkSync(filePath);
-            console.log(`Deleted file ${fileName}`);
-            let message = encodeURIComponent('File deleted successfully');
-            return res.redirect('/?successMessage=' + message);
+        for (let f of files) {
+            if (f == fileName) {
+                const filePath = path.join(__dirname, `../uploads/${fileName}`);
+                fs.unlinkSync(filePath);
+                console.log(`Deleted file ${fileName}`);
+                pool.query(
+                    'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
+                    [req.user.id, `Deleted ${req.params.id}`],
+                    (error, results) => {
+                      if (error) {
+                        console.error(error);
+                      }
+                    }
+                );
+
+                let message = encodeURIComponent('File deleted successfully');
+                return res.redirect('/?successMessage=' + message);
+            }
         }
+    } else {
+        // Every owner can delete their own stuff
+
+        pool.query(
+            'SELECT operation FROM user_logs WHERE user_id = ?;',
+            [req.user.id],
+            (error, results) => {
+                if (error) {
+                    console.error(error);
+                    let message = encodeURIComponent('Error deleting file');
+                    return res.redirect('/?errorMessage=' + message);
+                }
+                for (let result in results) {
+                    if (result.includes(fileName)) {
+                        const filePath = path.join(__dirname, `../uploads/${fileName}`);
+                        fs.unlinkSync(filePath);
+                        console.log(`Deleted file ${fileName}`);
+                        pool.query(
+                            'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
+                            [req.user.id, `Deleted ${req.params.id}`],
+                            (error, results) => {
+                              if (error) {
+                                console.error(error);
+                              }
+                            }
+                        );
+                        
+                        let message = encodeURIComponent('File deleted successfully');
+                        return res.redirect('/?successMessage=' + message);
+                    }
+                }
+            }
+        );
     }
-
-    pool.query(
-        'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
-        [req.user.id, `Deleted ${req.params.id}`],
-        (error, results) => {
-          if (error) {
-            console.error(error);
-          }
-        }
-    );
 
     let message = encodeURIComponent("File not found");
     res.redirect('/?errorMessage=' + message);
