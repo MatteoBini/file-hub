@@ -3,6 +3,7 @@ const router = express.Router();
 
 const { pool } = require(`../dbConfig`);
 
+// Warning!!!! IS public
 router.get("/get", async (req, res) => {
     try {
         const results = await pool.promise().query("SELECT * FROM Folders;");
@@ -14,23 +15,35 @@ router.get("/get", async (req, res) => {
 });
 
 router.post("/create", (req, res) => {
-    const { folderParent, folderName } = req.body;
+    const { parentID, folderName } = req.body;
+    const userID = req.user.id;
 
     pool.query(
-        "INSERT INTO user_logs (FolderName, ParentFolderID) VALUES (?, ?)",
-        [folderName, folderParent],
+        "INSERT INTO Folders (FolderName, ParentFolderID, UserID) VALUES (?, ?, ?)",
+        [folderName, parentID, userID],
         (error, results) => {
             if (error) {
                 console.error(error);
                 let message = encodeURIComponent('Err');
                 return res.redirect('/?errorMessage=' + message);
             }
-
-            let message = encodeURIComponent('Folder created successfully');
-            return res.redirect('/?successMessage=' + message);
         }
     );
 
+    pool.query(
+        "INSERT INTO user_logs (user_id, operation) VALUES (?, ?)",
+        [userID, `Created ${folderName} in ${parentID}`],
+        (error, results) => {
+            if (error) {
+                console.error(error);
+                let message = encodeURIComponent('Err');
+                return res.redirect('/?errorMessage=' + message);
+            }
+        }
+    );
+
+    let message = encodeURIComponent('Folder created successfully');
+    return res.redirect('/?successMessage=' + message);
 });
 
 module.exports = router;
