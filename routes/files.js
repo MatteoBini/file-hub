@@ -30,12 +30,12 @@ router.get("/get", async (req, res) => {
     }
 });
 
-router.get("/:FileName", (req, res) => {
+router.get("/:FileName", async (req, res) => {
     const fileName = req.params.FileName;
-    const files = utils.getFiles();
+    const files = await utils.getFiles();
 
     for (let f of files) {
-        if (f == fileName) {
+        if (f.FileName == fileName) {
             console.log(`Viewed file ${fileName}`);
             const filePath = path.join(__dirname, `../uploads/${fileName}`);
             return res.sendFile(filePath);
