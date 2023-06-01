@@ -3,7 +3,6 @@ const router = express.Router();
 
 const bcrypt = require("bcrypt");
 
-const utils = require(`../utils`);
 const { pool } = require(`../dbConfig`);
 
 router.use(express.urlencoded({ extended: true }));
@@ -14,7 +13,6 @@ router.get("/:id", (req, res) => {
         [req.params.id],
         (err, results) => {
             if (err) { throw err; }
-            console.log(results)
             return res.render("user.ejs", { logs: results });
         }
     );
@@ -73,9 +71,11 @@ router.get("/delete/:id", (req, res) => {
     pool.query(
         'INSERT INTO user_logs (user_id, operation) VALUES (?, ?);',
         [req.user.id, `Deleted user ${req.params.id}`],
-        (error, results) => {
-          if (error) {
-            console.error(error);
+        (err) => {
+          if (err) {
+            console.error(err);
+            let message = encodeURIComponent("User not deleted successfully");
+            return res.redirect('/admin?errorMessage=' + message); 
           }
         }
     );

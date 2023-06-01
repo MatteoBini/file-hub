@@ -42,7 +42,7 @@ app.use('/folders', foldersRoutes);
 
 app.get("/", async (req, res) => {
     let data = {
-        files: utils.getFiles(),
+        files: await utils.getFiles(),
         successMessage: req.query.successMessage,
         infoMessage: req.query.infoMessage,
         warningMessage: req.query.warningMessage,
@@ -55,18 +55,17 @@ app.get("/", async (req, res) => {
     } else {
         res.render("login.ejs", data);
     }
-    
 });
 
-app.get("/admin", (req, res) => {
+app.get("/admin", async (req, res) => {
     if (req.isAuthenticated()) {
         if (req.user.username == "admin") {
             pool.query(
                 `SELECT * FROM users;`,
-                (err, results) => {
+                async (err, results) => {
                     if (err) {  throw err;  }
                     return res.render("admin.ejs", { 
-                        files: utils.getFiles(), 
+                        files: await utils.getFiles(), 
                         successMessage: req.query.successMessage,
                         infoMessage: req.query.infoMessage,
                         warningMessage: req.query.warningMessage,

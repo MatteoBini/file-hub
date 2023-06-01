@@ -7,9 +7,24 @@
                     <input type="text" id="folderName" name="folderName" placeholder="Subfolder name">
                     <input type="submit" value="Send" placeholder="Submit">
                 </form>
+                <% let f = [] %>
+                <% files.forEach(function(file) { %>
+                    <% if (file.FolderID == folder.FolderID) { %>
+                        <% f.push(file) %>
+                    <% } %>
+                <% }); %>
+                    
+                <%- include('files', { files: f }) %>
+
+                <form action="/files/create" method="POST" enctype="multipart/form-data">
+                    <input style="display: none" type="text" id="folderID" name="folderID" value="<%= folder.FolderID %>" />
+                    <input type="file" id="file" name="file" value="">
+                    <input type="submit" value="Upload a file">
+                </form>                
+
                 <% if (folder.Subfolders && folder.Subfolders.length > 0) { %>
                     <%- include('folders', { folders: folder.Subfolders }) %>
-            <% } %>
+                <% } %>
         </li>
     <% }); %>
 </ul>

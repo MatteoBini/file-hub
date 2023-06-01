@@ -50,6 +50,11 @@ router.post("/delete", (req, res) => {
     const { folderID } = req.body;
     const userID = req.user.id;
 
+    if (userID != 1) { // user is not ADMIN
+        let message = encodeURIComponent('Only admin can delete folders');
+        return res.redirect('/?errorMessage=' + message);
+    }
+
     pool.query(
         "DELETE FROM Folders WHERE FolderID=?",
         [folderID],

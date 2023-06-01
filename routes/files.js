@@ -20,8 +20,18 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.get("/:id", (req, res) => {
-    const fileName = req.params.id;
+router.get("/get", async (req, res) => {
+    try {
+        const results = await pool.promise().query("SELECT * FROM Files;");
+        res.json({ results });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "An error occurred" });
+    }
+});
+
+router.get("/:FileName", (req, res) => {
+    const fileName = req.params.FileName;
     const files = utils.getFiles();
 
     for (let f of files) {
@@ -38,16 +48,16 @@ router.get("/:id", (req, res) => {
 
 router.post('/create', upload.single('file'), (req, res) => {
     const { filename, size, mimetype } = req.file;
-    const { userID } = req.body;
-    const uploadDate = new Date().toISOString();
+    const { folderID } = req.body;
+    const userID = req.user.id;
 
     const insertFileQuery = `
-      INSERT INTO Files (FileName, FileSize, FileType, UploadDate, UserID)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO Files (FileName, FileSize, FileType, UserID, FolderID)
+      VALUES (?, ?, ?, ?, ?);
     `;
 
     let fileID;
-    pool.run(insertFileQuery, [filename, size, mimetype, uploadDate, userID], function (err) {
+    pool.query(insertFileQuery, [filename, size, mimetype, userID, folderID], function (err) {
         if (err) {
             console.error(err);
             return res.status(500).send('Error uploading file');
@@ -70,18 +80,27 @@ router.post('/create', upload.single('file'), (req, res) => {
     res.redirect('/?successMessage=' + message);
 });
 
-router.get("/delete/:id", (req, res) => {
-    const fileName = req.params.id;
-    const files = utils.getFiles();
-    
+router.get("/delete/:FileName", async (req, res) => {
+    const fileName = req.params.FileName;
+    const files = await utils.getFiles();
+
     if (req.user.username == "admin") {
         // Admin can delete everything
 
         for (let f of files) {
-            if (f == fileName) {
+            if (f.FileName == fileName) {
                 const filePath = path.join(__dirname, `../uploads/${fileName}`);
                 fs.unlinkSync(filePath);
                 console.log(`Deleted file ${fileName}`);
+                pool.query(
+                    'DELETE FROM Files WHERE FileName=?',
+                    [fileName],
+                    (error, results) => {
+                      if (error) {
+                        console.error(error);
+                      }
+                    }
+                );
                 pool.query(
                     'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
                     [req.user.id, `Deleted ${req.params.id}`],
@@ -109,10 +128,19 @@ router.get("/delete/:id", (req, res) => {
                     return res.redirect('/?errorMessage=' + message);
                 }
                 for (let result in results) {
-                    if (result.includes(fileName)) {
+                    if (f.FileName == fileName) {
                         const filePath = path.join(__dirname, `../uploads/${fileName}`);
                         fs.unlinkSync(filePath);
                         console.log(`Deleted file ${fileName}`);
+                        pool.query(
+                            'DELETE FROM Files WHERE FileName=?',
+                            [fileName],
+                            (error, results) => {
+                              if (error) {
+                                console.error(error);
+                              }
+                            }
+                        );
                         pool.query(
                             'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
                             [req.user.id, `Deleted ${req.params.id}`],
@@ -122,7 +150,7 @@ router.get("/delete/:id", (req, res) => {
                               }
                             }
                         );
-                        
+        
                         let message = encodeURIComponent('File deleted successfully');
                         return res.redirect('/?successMessage=' + message);
                     }

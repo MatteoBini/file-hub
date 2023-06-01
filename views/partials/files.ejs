@@ -1,16 +1,12 @@
-<h3>Saved files:</h3>
-<ul>
-    <% for (let file of files) { %>
-        <li>
-            <%= file %>
-            <a href="/files/<%= file %>" target="_blank">View</a>
-            <a href="/files/delete/<%= file %>">Delete</a>
-        </li>
-    <% } %>
-</ul>
-
-<h3>Upload a file</h3>
-<form action="/files/create" method="POST" enctype="multipart/form-data">
-    <input type="file" id="file" name="file">
-    <input type="submit" value="Upload">
-</form>
+<% for (let file of files) { %>
+    <li>
+        <%= file.FileName %>
+        (
+            Size: <%= file.FileSize %>,
+            Type: <%= file.FileType %>,
+            Upload date: <%= file.UploadDate %>
+        )
+        <a href="/files/<%= file.FileName %>" target="_blank">View</a>
+        <a href="/files/delete/<%= file.FileName %>">Delete</a>
+    </li>
+<% } %>
