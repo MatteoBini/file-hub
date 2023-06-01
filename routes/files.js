@@ -70,9 +70,9 @@ router.post('/create', upload.single('file'), (req, res) => {
         'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
         [req.user.id, `Created ${fileID} (if undefined created a file)`],
         (error, results) => {
-          if (error) {
-            console.error(error);
-          }
+            if (error) {
+                console.error(error);
+            }
         }
     );
 
@@ -83,6 +83,8 @@ router.post('/create', upload.single('file'), (req, res) => {
 router.get("/delete/:FileName", async (req, res) => {
     const fileName = req.params.FileName;
     const files = await utils.getFiles();
+
+    let message;
 
     if (req.user.username == "admin") {
         // Admin can delete everything
@@ -95,39 +97,35 @@ router.get("/delete/:FileName", async (req, res) => {
                 pool.query(
                     'DELETE FROM Files WHERE FileName=?',
                     [fileName],
-                    (error, results) => {
-                      if (error) {
-                        console.error(error);
-                      }
+                    (error) => {
+                        if (error) {
+                            console.error(error);
+                        }
                     }
                 );
                 pool.query(
                     'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
                     [req.user.id, `Deleted ${req.params.id}`],
-                    (error, results) => {
-                      if (error) {
-                        console.error(error);
-                      }
+                    (error) => {
+                        if (error) {
+                            console.error(error);
+                        }
                     }
                 );
 
-                let message = encodeURIComponent('File deleted successfully');
-                return res.redirect('/?successMessage=' + message);
+                message = encodeURIComponent('File deleted successfully');
             }
         }
     } else {
         // Every owner can delete their own stuff
-
         pool.query(
-            'SELECT operation FROM user_logs WHERE user_id = ?;',
+            'SELECT FileName FROM Files WHERE UserID = ?;',
             [req.user.id],
             (error, results) => {
                 if (error) {
                     console.error(error);
-                    let message = encodeURIComponent('Error deleting file');
-                    return res.redirect('/?errorMessage=' + message);
                 }
-                for (let result in results) {
+                results.forEach(async (f) => {
                     if (f.FileName == fileName) {
                         const filePath = path.join(__dirname, `../uploads/${fileName}`);
                         fs.unlinkSync(filePath);
@@ -135,32 +133,35 @@ router.get("/delete/:FileName", async (req, res) => {
                         pool.query(
                             'DELETE FROM Files WHERE FileName=?',
                             [fileName],
-                            (error, results) => {
-                              if (error) {
-                                console.error(error);
-                              }
+                            (error) => {
+                                if (error) {
+                                    console.error(error);
+                                }
                             }
                         );
                         pool.query(
                             'INSERT INTO user_logs (user_id, operation) VALUES (?, ?)',
                             [req.user.id, `Deleted ${req.params.id}`],
-                            (error, results) => {
-                              if (error) {
-                                console.error(error);
-                              }
+                            (error) => {
+                                if (error) {
+                                    console.error(error);
+                                }
                             }
                         );
-        
-                        let message = encodeURIComponent('File deleted successfully');
-                        return res.redirect('/?successMessage=' + message);
+
+                        message = encodeURIComponent('File deleted successfully');
                     }
-                }
+                });
             }
         );
     }
 
-    let message = encodeURIComponent("File not found");
-    res.redirect('/?errorMessage=' + message);
+    if (message === undefined) {
+        message = encodeURIComponent("You can delete only your own files.");
+        return res.redirect('/?errorMessage=' + message);
+    } else {
+        return res.redirect('/?successMessage=' + message);
+    }
 });
 
 module.exports = router;

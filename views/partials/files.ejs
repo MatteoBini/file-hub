@@ -1,12 +1,14 @@
-<% for (let file of files) { %>
-    <li>
-        <%= file.FileName %>
-        (
-            Size: <%= file.FileSize %>,
-            Type: <%= file.FileType %>,
-            Upload date: <%= file.UploadDate %>
-        )
-        <a href="/files/<%= file.FileName %>" target="_blank">View</a>
-        <a href="/files/delete/<%= file.FileName %>">Delete</a>
-    </li>
-<% } %>
+<ul>
+    <% for (let file of files) { %>
+        <li>
+            <%= file.FileName %>
+            (
+                Size: <%= file.FileSize %>,
+                Type: <%= file.FileType %>,
+                Upload date: <%= file.UploadDate %>
+            )
+            <a href="/files/<%= file.FileName %>" target="_blank">View</a>
+            <a href="/files/delete/<%= file.FileName %>">Delete</a>
+        </li>
+    <% } %>
+</ul>
