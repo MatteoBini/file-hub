@@ -12,3 +12,8 @@
 | files.js | /files/create | Loads a file | Status OK
 | folders.js | /files/delete/:name | Delete a virtual folder | Status OK
 
+Todos:
+ - Correct and improve UI (there's a bug in deleting own stuff for users)
+ - Turn APIs private
+ - Discover and fix bugs
+
