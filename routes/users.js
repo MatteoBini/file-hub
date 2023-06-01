@@ -7,13 +7,12 @@ const { pool } = require(`../dbConfig`);
 
 router.use(express.urlencoded({ extended: true }));
 
-router.get("/:id", (req, res) => {
+router.get("/get", (req, res) => {
     pool.query(
-        `SELECT * FROM user_logs WHERE user_id = ?;`,
-        [req.params.id],
+        `SELECT * FROM users WHERE password<>'';`,
         (err, results) => {
             if (err) { throw err; }
-            return res.render("user.ejs", { logs: results });
+            return res.json({ results });
         }
     );
 
@@ -31,7 +30,7 @@ router.post("/create", (req, res) => {
             pool.query(
                 `INSERT INTO users (username, password) VALUES (?, ?);`,
                 [username, hash],
-                (error, results) => {
+                (error) => {
                     if (error) {
                             console.log(error);
                             let message = encodeURIComponent("User creation gone wrong");
@@ -57,31 +56,59 @@ router.post("/create", (req, res) => {
 });
 
 router.get("/delete/:id", (req, res) => {
+    const deleteUserId = req.params.id;
+
+    let message = null;
     pool.query(
-        `DELETE FROM users WHERE id = ?;`,
-        [req.params.id],
+        `UPDATE users SET password = '' WHERE id = ?;`,
+        [deleteUserId],
         (err) => {
             if (err) {
-                let message = encodeURIComponent("User not deleted successfully");
-                return res.redirect('/admin?errorMessage=' + message); 
+                message = encodeURIComponent("User not deleted successfully");
             }
         }
     );
 
     pool.query(
         'INSERT INTO user_logs (user_id, operation) VALUES (?, ?);',
-        [req.user.id, `Deleted user ${req.params.id}`],
+        [req.user.id, `Deleted user ${deleteUserId}`],
         (err) => {
           if (err) {
             console.error(err);
-            let message = encodeURIComponent("User not deleted successfully");
-            return res.redirect('/admin?errorMessage=' + message); 
+            message = encodeURIComponent("User not deleted successfully");
           }
         }
     );
 
-    let message = encodeURIComponent("User deleted successfully");
-    res.redirect('/admin?successMessage=' + message);
+    if (message != null) {
+        return res.redirect('/admin?errorMessage=' + message);
+    } else {
+        message = encodeURIComponent("User deleted successfully");
+        return res.redirect('/admin?successMessage=' + message);
+    }
+});
+
+router.get("/deleted", (req, res) => {
+    pool.query(
+        `SELECT * FROM users WHERE password="";`,
+        (err, results) => {
+            if (err) { throw err; }
+            return res.json({ "logs": results });
+        }
+    );
+
+});
+
+router.get("/:id", (req, res) => {
+    pool.query(
+        `SELECT * FROM user_logs WHERE user_id = ?;`,
+        [req.params.id],
+        (err, results) => {
+            if (err) { throw err; }
+            return res.render("user.ejs", { logs: results });
+        }
+    );
+
 });
 
 module.exports = router;

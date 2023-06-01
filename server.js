@@ -60,19 +60,14 @@ app.get("/", async (req, res) => {
 app.get("/admin", async (req, res) => {
     if (req.isAuthenticated()) {
         if (req.user.username == "admin") {
-            pool.query(
-                `SELECT * FROM users;`,
-                async (err, results) => {
-                    if (err) {  throw err;  }
-                    return res.render("admin.ejs", { 
-                        files: await utils.getFiles(), 
-                        successMessage: req.query.successMessage,
-                        infoMessage: req.query.infoMessage,
-                        warningMessage: req.query.warningMessage,
-                        errorMessage: req.query.errorMessage,
-                        users: results
-                    });
-                }
+                return res.render("admin.ejs", { 
+                    files: await utils.getFiles(), 
+                    successMessage: req.query.successMessage,
+                    infoMessage: req.query.infoMessage,
+                    warningMessage: req.query.warningMessage,
+                    errorMessage: req.query.errorMessage,
+                    users: await utils.getUsers()
+            }
             );
         } else {
             let message = encodeURIComponent('Only admin can access');

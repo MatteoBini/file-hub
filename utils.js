@@ -39,7 +39,7 @@ const axios = require(`axios`);
         try {
             const response = await axios.get('http://localhost:8000/files/get');
             const data = response.data;
-            
+
             return data.results[0];
         } catch (error) {
             console.error(error);
@@ -50,9 +50,21 @@ const axios = require(`axios`);
     module.exports.getFolders = async function () {
         try {
             const response = await axios.get('http://localhost:8000/folders/get');
-            const data = response.data;
+            const data = response.data.results[0];
 
-            return createFolderStructure(data.results[0]);
+            return createFolderStructure(data);
+        } catch (error) {
+            console.error(error);
+            return { error: 'An error occurred' };
+        }
+    }
+
+    module.exports.getUsers = async function () {
+        try {
+            const response = await axios.get('http://localhost:8000/users/get');
+            const data = response.data.results;
+
+            return data;
         } catch (error) {
             console.error(error);
             return { error: 'An error occurred' };
